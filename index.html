@@ -1,0 +1,224 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>swf</title>
+		<script type="text/javascript" src="src/jquery-1.11.1.min.js"></script>
+        <script type="text/javascript">
+            var c;
+            var v;
+            var FPS = 10;
+            var run;
+            var step;
+            var t1, t2;
+            //logic of FRAME      [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7] [8]  [9]  [10]  [11]  [12]  [13]
+            var sFrame = new Array(0, 192, 267, 340, 381, 466, 512, 541, 648, 688, 734, 789, 835, 879);
+            var eFrame = new Array(161, 252, 324, 371, 453, 490, 526, 644, 680, 728, 782, 829, 874, 1036);
+            //logic of CONTROL
+            var cFrame = new Array(
+                new Array(121, 192, 1),
+                new Array(193, 267, 2),
+                new Array(292, 541, 2),
+                new Array(576, 688, 2),
+                new Array(723, 735, 4),
+                new Array(776, 787, 4),
+                new Array(823, 836, 4),
+                new Array(868, 881, 4),
+                new Array(901, 2000, 2)
+                );
+            var cMargin = new Array(0, 1, 2, 2, 1);
+            var cStep = 0;
+            var stopTimer = 0;
+
+            function onFrameTimer()
+            {
+                var time = v.currentTime;
+                frameID = time * FPS;
+                console.log("FrameId:%d, Time: %f", frameID, time);
+
+                //Play Frame
+                if (run == 1 && frameID >= eFrame[step])
+                {
+                    run = 0;
+                    v.pause();
+                }
+                if (run == 1)
+                {
+                    ctx.drawImage(v, 0, 0);
+                }
+				if (time >= v.duration)
+				{
+				    stopTimer = 1;
+				    clearInterval(t1);
+				}
+
+                //Control
+                var showControl = 0;
+                var showType = 0;
+                for (var i = 0; i < cFrame.length; i++)
+                {
+                    var item = cFrame[i];
+                    var s = item[0];
+                    var e = item[1];
+                    var t = item[2];
+                    if (s <= frameID && frameID <= e)
+                    {
+                        showType = t;
+                        showControl = 1;
+                        break;
+                    }
+                }
+                if (showControl == 1)
+                {
+                    if (showType == 1)
+                    {
+                        //only NEXT
+                        $("#prevStep").css("display", "none");
+                        $("#nextStep").css("display", "block");
+                        $("#prevStep").css("top", (prevTop - cMargin[cStep]) + 'px');
+                        $("#nextStep").css("top", (nextTop + cMargin[cStep]) + 'px');
+                        cStep = (cStep+1) % (cMargin.length);
+                    }
+                    else if (showType == 2)
+                    {
+                        //PREV & NEXT
+                        $("#prevStep").css("display", "block");
+                        $("#nextStep").css("display", "block");
+                        $("#prevStep").css("top", (prevTop - cMargin[cStep]) + 'px');
+                        $("#nextStep").css("top", (nextTop + cMargin[cStep]) + 'px');
+                        cStep = (cStep+1) % (cMargin.length);
+                    }
+                    else if (showType == 3)
+                    {
+                        //only PREV
+                        $("#prevStep").css("display", "block");
+                        $("#nextStep").css("display", "none");
+                        $("#prevStep").css("top", (prevTop - cMargin[cStep]) + 'px');
+                        $("#nextStep").css("top", (nextTop + cMargin[cStep]) + 'px');
+                        cStep = (cStep+1) % (cMargin.length);
+                    }
+                    else if (showType == 4)
+                    {
+                        //only PPT
+                        $("#prevStep").css("display", "none");
+                        $("#nextStep").css("display", "none");
+                        $("#nextPPT").css("display", "block");
+                    }                
+                }
+                else
+                {
+                    //NONE
+                    $("#prevStep").css("display", "none");
+                    $("#nextStep").css("display", "none");
+                    $("#nextPPT").css("display", "none");
+                }         
+            }
+
+            $(document).ready(function () {
+                v = document.getElementById("videoPlayer");
+                c = document.getElementById("myCanvas");
+                ctx = c.getContext("2d");
+                prevTop = $("#prevStep").css("top");
+                nextTop = $("#nextStep").css("top");
+                prevTop = parseInt(prevTop.substr(0, prevTop.length - 2));
+                nextTop = parseInt(nextTop.substr(0, nextTop.length - 2));
+                $("#nextStep").css("display", "none");
+                $("#prevStep").css("display", "none");
+
+                step = 0;
+                run = 1;
+                var frameID = 0
+                v.currentTime = frameID / FPS;
+                v.play();
+                t1 = setInterval("onFrameTimer()", 1000 / 20);
+                //t2 = setInterval("onLogicTimer()", 1000 / FPS);
+
+                $("#nextStep,#nextPPT").click(function () {
+                    //last frame
+                    if (step < sFrame.length - 1)
+                    {
+                        step++;
+                        frameID = sFrame[step];
+                        v.currentTime = frameID / FPS;
+                        run = 1;
+                        v.play();
+                    }
+                    else
+                    {
+                        v.currentTime = v.duration-0.1;
+                        run = 1;
+                        v.play();
+                    }
+                });
+
+                $("#prevStep").click(function () {
+                    //first frame
+                    if (step > 0)
+                    {
+                        step--;
+                        frameID = sFrame[step];
+                        v.currentTime = frameID / FPS;
+                        run = 1;
+                        v.play();
+                        if (stopTimer == 1)
+                        {
+                            t1 = setInterval("onFrameTimer()", 1000 / 20);
+                            stopTimer = 0;
+                        }
+                    }
+                });
+            });
+        </script>
+        <style type="text/css">
+            #prevStep{
+                width:36px;
+                height:22px;
+                position: relative;
+                left: 640px;
+                top: 494px;
+                cursor: pointer;
+                background: url(src/arrow_up.png) no-repeat;
+            }
+            #nextStep{
+                width:36px;
+                height:22px;
+                position: relative;
+                left: 640px;
+                top: 538px;
+                cursor: pointer;
+                background: url(src/arrow_down.png) no-repeat;
+            }
+            #nextPPT{
+                width:121px;
+                height:47px;
+                position: relative;
+                left: 702px;
+                top: 452px;
+                cursor: pointer;
+                background: url(src/arrow_ppt.png) no-repeat;
+            }
+            #prevStep:hover{
+                background: url(src/arrow_up1.png) no-repeat;
+            }
+            #nextStep:hover{
+                background: url(src/arrow_down1.png) no-repeat;
+            }
+        </style>
+    </head>
+    <body style="margin:0;padding:0;">
+        <video id="videoPlayer" src="src/fzsx_r01s01p01.mp4" width="1024" height="600" controls="controls" style="display:none;">
+            Your browser does not support the video element.
+        </video>
+        <div style="width:1024px;height:600px;background-color:black;">
+            <div style="width:1024px;height:600px;position:absolute">
+                <canvas id="myCanvas" width="1024" height="600" style="width:1024px;height:600px;background-color:black;">
+                    Your browser does not support the canvas element.
+                </canvas>
+            </div>
+            <div style="width:1024px;height:600px;position:absolute">
+                <div id="nextStep"></div>
+                <div id="prevStep"></div>
+				<div id="nextPPT"></div>
+            </div>
+        </div>
+    </body>
+</html>
