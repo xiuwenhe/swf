@@ -6,6 +6,7 @@
         <script type="text/javascript">
             var c;
             var v;
+            var ctx;
             var FPS = 10;
             var run;
             var step;
@@ -34,7 +35,7 @@
                 var time = v.currentTime;
                 frameID = time * FPS;
                 console.log("FrameId:%d, Time: %f", frameID, time);
-
+				$("#log").html("FrameId:"+frameID+", Time: "+time);
                 //Play Frame
                 if (run == 1 && frameID >= eFrame[step])
                 {
@@ -124,13 +125,17 @@
                 $("#nextStep").css("display", "none");
                 $("#prevStep").css("display", "none");
 
-                step = 0;
-                run = 1;
-                var frameID = 0
-                v.currentTime = frameID / FPS;
-                v.play();
-                t1 = setInterval("onFrameTimer()", 1000 / 20);
-                //t2 = setInterval("onLogicTimer()", 1000 / FPS);
+				//v.oncanplay = function(){
+					step = 0;
+					run = 1;
+					var frameID = 0
+					v.currentTime = frameID / FPS;
+					v.play();
+					t1 = setInterval("onFrameTimer()", 1000 / 20);
+					//t2 = setInterval("onLogicTimer()", 1000 / FPS);
+					$("#log1").html("loaded:"+v.loaded+",duration:"+v.duration);
+				//};
+                
 
                 $("#nextStep,#nextPPT").click(function () {
                     //last frame
@@ -205,7 +210,7 @@
         </style>
     </head>
     <body style="margin:0;padding:0;">
-        <video id="videoPlayer" src="src/fzsx_r01s01p01.mp4" width="1024" height="600" controls="controls" style="display:none;">
+        <video id="videoPlayer" src="src/fzsx_r01s01p01.mp4" autoplay="true" width="1024" height="600" controls="controls" style="display:none;">
             Your browser does not support the video element.
         </video>
         <div style="width:1024px;height:600px;background-color:black;">
@@ -220,5 +225,7 @@
 				<div id="nextPPT"></div>
             </div>
         </div>
+		<div id="log1"></div>
+		<div id="log"></div>
     </body>
 </html>
